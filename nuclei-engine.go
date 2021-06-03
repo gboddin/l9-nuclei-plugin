@@ -14,7 +14,6 @@ import (
 
 
 func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format.L9Event, hostHttpClient *http.Client) bool {
-	//Now we do logic & network stuff \o/
 	var matcherEval bool
 	for _, request := range template.Requests {
 		log.Println("Doing request")
@@ -69,7 +68,8 @@ func (plugin NucleiPlugin) Init() error {
 	nucleiTemplates = make(map[string][]*NucleiTemplate)
 	templatePath, isSet := os.LookupEnv("NUCLEI_TEMPLATES")
 	if !isSet {
-		log.Println("Nuclei is built-in but no NUCLEI_TEMPLATES environment variable has been found")
+		log.Println("Nuclei is built-in but no NUCLEI_TEMPLATES environment variable has been found, plugin disabled")
+		return nil
 	}
 	templateCount := 0
 	skippedCount := 0
@@ -140,7 +140,7 @@ type Request struct{
 
 type Info struct{
 	Name string `json:"name"`
-	Author string `json:""`
+	Author string `json:"author"`
 	Severity string
 	Tags string
 	Description string
@@ -187,6 +187,9 @@ func (nTemplate NucleiTemplate) IsSupported() bool {
 		}
 		for _, matcher := range request.Matchers {
 			if len(matcher.Dsn) > 0 {
+				return false
+			}
+			if matcher.Type != "word" && matcher.Type != "status" {
 				return false
 			}
 		}

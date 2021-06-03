@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/LeakIX/l9format"
 	"net/http"
+	"strings"
 )
 
 type NucleiPlugin struct {
@@ -28,6 +29,9 @@ func (NucleiPlugin) GetStage() string {
 }
 
 func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, options map[string]string) bool {
+	if len(nucleiTemplates) < 1 {
+		return false
+	}
 	hasLeak := false
 	var hostHttpClient *http.Client
 	for _, tag := range event.Tags {
@@ -45,6 +49,9 @@ func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, opt
 				hasLeak = true
 			}
 		}
+	}
+	if hasLeak {
+		event.Summary = fmt.Sprintf("Nuclei scan report for tags %s:\n\n", strings.Join(event.Tags,", ")) + event.Summary
 	}
 	return hasLeak
 }
