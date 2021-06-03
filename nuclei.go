@@ -2,6 +2,7 @@ package l9_nuclei_plugin
 
 import (
 	"context"
+	"fmt"
 	"github.com/LeakIX/l9format"
 	"net/http"
 )
@@ -40,6 +41,7 @@ func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, opt
 		for _, matchedTemplate := range matchedTemplates {
 			thisHasLeak := plugin.RunTemplate(matchedTemplate, event, hostHttpClient)
 			if thisHasLeak {
+				event.Summary += fmt.Sprintf("%s : %s by %s\n-------------\n%s\n\n", matchedTemplate.Id, matchedTemplate.Info.Name, matchedTemplate.Info.Author, matchedTemplate.Info.Description)
 				hasLeak = true
 			}
 		}
