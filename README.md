@@ -1,9 +1,10 @@
 # L9 Nuclei plugin
 
-This L9 plugin re-implements a limited subset of [Nuclei](https://github.com/projectdiscovery/nuclei), 
-[ProjectDiscovery](https://github.com/projectdiscovery)'s awesome network scanner.
+This L9 plugin re-implements a limited [Nuclei](https://github.com/projectdiscovery/nuclei) template parser and runner.
 
-This allows for l9explore to stick to deep-protocol inspections while taking advantage of well maintained templates for
+Checkout [ProjectDiscovery](https://github.com/projectdiscovery)'s awesome network tools for more informations.
+
+This allows for `l9explore` to stick to deep-protocol inspections while taking advantage of well maintained templates for
 web application scanning.
 
 ## Features
