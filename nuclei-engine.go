@@ -12,7 +12,6 @@ import (
 	"strings"
 )
 
-
 func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format.L9Event, hostHttpClient *http.Client) bool {
 	var matcherEval bool
 	for _, request := range template.Requests {
@@ -21,7 +20,12 @@ func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format
 			log.Println("Doing Path")
 			finalUrl := strings.Replace(path, "{{BaseURL}}", event.Url(), -1)
 			log.Printf(finalUrl)
-			_, body, statusCode, err := plugin.DoRequest(hostHttpClient,request.Method,finalUrl, nil)
+			var bodyReader io.Reader = nil
+			if len(request.Body) > 0 {
+				bodyReader = bytes.NewReader(request.Body)
+			}
+			_, body, statusCode, err :=
+				plugin.DoRequest(hostHttpClient, request.Method, finalUrl, bodyReader, request.Headers)
 			if err != nil {
 				continue
 			}
@@ -29,7 +33,7 @@ func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format
 			for _, matcher := range request.Matchers {
 				log.Println(request.MatchersCondition)
 				// BEGIN if matchers are OR break when we find first one
-				if (request.MatchersCondition == "or" || len(request.MatchersCondition)<1) && matcherEval == true {
+				if (request.MatchersCondition == "or" || len(request.MatchersCondition) < 1) && matcherEval == true {
 					break
 				}
 				//Reset state
@@ -45,7 +49,7 @@ func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format
 				}
 				if matcher.Type == "status" {
 					for _, status := range matcher.Status {
-						if status == statusCode  {
+						if status == statusCode {
 							matcherEval = true
 						}
 					}
@@ -106,51 +110,50 @@ func (plugin NucleiPlugin) Init() error {
 	return err
 }
 
-
 type NucleiTemplate struct {
-	Id string `json:"id" yaml:"id"`
-	Info Info `json:"info" yaml:"info"`
+	Id       string    `json:"id" yaml:"id"`
+	Info     Info      `json:"info" yaml:"info"`
 	Requests []Request `json:"requests" yaml:"requests"`
 	Headless []interface{}
-	Dns []interface{}
-	File []interface{}
-	Network []interface{}
-
+	Dns      []interface{}
+	File     []interface{}
+	Network  []interface{}
 }
 
-type Matcher struct{
-	Type string `json:"type" yaml:"type"`
-	Words []string `json:"words" yaml:"words"`
-	Status []int `json:"status" yaml:"status"`
-	Condition string `json:"condition" yaml:"condition"`
-	Part string `json:"part" yaml:"part"`
-	Dsn string `json:"dsn" yaml:"dns"`
-	Negative bool `json:"negative" yaml:"negative"`
+type Matcher struct {
+	Type      string   `json:"type" yaml:"type"`
+	Words     []string `json:"words" yaml:"words"`
+	Status    []int    `json:"status" yaml:"status"`
+	Condition string   `json:"condition" yaml:"condition"`
+	Part      string   `json:"part" yaml:"part"`
+	Dsn       string   `json:"dsn" yaml:"dns"`
+	Negative  bool     `json:"negative" yaml:"negative"`
 }
 
-type Request struct{
-	Raw []interface{} `json:"raw" yaml:"raw"`
-	Method string `json:"method" yaml:"method"`
-	Path []string `json:"path" yaml:"path"`
-	MatchersCondition string `json:"matchers-condition" yaml:"matchers-condition"`
-	Matchers []Matcher `json:"matchers" yaml:"matchers"`
-	ReqCondition bool `json:"req-condition" yaml:"req-condition"`
-	Payloads map[string]interface{} `json:"payloads" yaml:"payloads"`
+type Request struct {
+	Raw               []interface{}          `json:"raw" yaml:"raw"`
+	Method            string                 `json:"method" yaml:"method"`
+	Path              []string               `json:"path" yaml:"path"`
+	MatchersCondition string                 `json:"matchers-condition" yaml:"matchers-condition"`
+	Matchers          []Matcher              `json:"matchers" yaml:"matchers"`
+	ReqCondition      bool                   `json:"req-condition" yaml:"req-condition"`
+	Payloads          map[string]interface{} `json:"payloads" yaml:"payloads"`
+	Body              []byte                 `json:"body" yaml:"body"`
+	Headers           map[string]string      `json:"headers" yaml:"headers"`
 }
 
-type Info struct{
-	Name string `json:"name"`
-	Author string `json:"author"`
-	Severity string
-	Tags string
+type Info struct {
+	Name        string `json:"name"`
+	Author      string `json:"author"`
+	Severity    string
+	Tags        string
 	Description string
 }
-
 
 var nucleiTemplates map[string][]*NucleiTemplate
 
 func (nTemplate NucleiTemplate) GetTags() []string {
-	return strings.Split(nTemplate.Info.Tags,",")
+	return strings.Split(nTemplate.Info.Tags, ",")
 }
 func (nTemplate NucleiTemplate) HasTag(tag string) bool {
 	for _, checkTag := range nTemplate.GetTags() {
@@ -201,21 +204,24 @@ func (nTemplate NucleiTemplate) IsSupported() bool {
 }
 
 // DoRequest Boring HTTP logic
-func (plugin NucleiPlugin) DoRequest(httpClient *http.Client ,method, url string, body io.Reader) (http.Header, string,int, error){
+func (plugin NucleiPlugin) DoRequest(httpClient *http.Client, method, url string, body io.Reader, headers map[string]string) (http.Header, string, int, error) {
 	httpRequest, err := http.NewRequest(method, url, body)
 	if err != nil {
-		return nil, "",-1, err
+		return nil, "", -1, err
+	}
+	for headerName, headerValue := range headers {
+		httpRequest.Header.Set(headerName, headerValue)
 	}
 	resp, err := httpClient.Do(httpRequest)
 	if err != nil {
-		return nil,"",-1, err
+		return nil, "", -1, err
 	}
 	defer resp.Body.Close()
 	buffer := new(bytes.Buffer)
 	// Read max 1MB
 	_, err = buffer.ReadFrom(io.LimitReader(resp.Body, 1024*1024))
 	if err != nil {
-		return nil,"", resp.StatusCode, err
+		return nil, "", resp.StatusCode, err
 	}
 	return resp.Header, buffer.String(), resp.StatusCode, nil
 }
@@ -226,7 +232,7 @@ func stringContains(source string, words []string, mustContainAll bool) bool {
 	}
 	var matchedWords int
 	for _, word := range words {
-		if strings.Contains(source ,word) {
+		if strings.Contains(source, word) {
 			matchedWords++
 			if !mustContainAll {
 				return true

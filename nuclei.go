@@ -17,7 +17,7 @@ func (NucleiPlugin) GetVersion() (int, int, int) {
 }
 
 func (NucleiPlugin) GetProtocols() []string {
-	return []string{"http","https"}
+	return []string{"http", "https"}
 }
 
 func (NucleiPlugin) GetName() string {
@@ -41,6 +41,8 @@ func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, opt
 		}
 		if hostHttpClient == nil {
 			hostHttpClient = plugin.GetHttpClient(ctx, event.Ip, event.Port)
+			hostHttpClient.Transport.(*http.Transport).DisableKeepAlives = false
+			defer hostHttpClient.CloseIdleConnections()
 		}
 		for _, matchedTemplate := range matchedTemplates {
 			thisHasLeak := plugin.RunTemplate(matchedTemplate, event, hostHttpClient)
@@ -51,7 +53,7 @@ func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, opt
 		}
 	}
 	if hasLeak {
-		event.Summary = fmt.Sprintf("Nuclei scan report for tags %s:\n\n", strings.Join(event.Tags,", ")) + event.Summary
+		event.Summary = fmt.Sprintf("Nuclei scan report for tags %s:\n\n", strings.Join(event.Tags, ", ")) + event.Summary
 	}
 	return hasLeak
 }
