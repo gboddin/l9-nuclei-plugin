@@ -22,7 +22,7 @@ func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format
 			log.Printf(finalUrl)
 			var bodyReader io.Reader = nil
 			if len(request.Body) > 0 {
-				bodyReader = bytes.NewReader(request.Body)
+				bodyReader = strings.NewReader(request.Body)
 			}
 			_, body, statusCode, err :=
 				plugin.DoRequest(hostHttpClient, request.Method, finalUrl, bodyReader, request.Headers)
@@ -138,7 +138,7 @@ type Request struct {
 	Matchers          []Matcher              `json:"matchers" yaml:"matchers"`
 	ReqCondition      bool                   `json:"req-condition" yaml:"req-condition"`
 	Payloads          map[string]interface{} `json:"payloads" yaml:"payloads"`
-	Body              []byte                 `json:"body" yaml:"body"`
+	Body              string                 `json:"body" yaml:"body"`
 	Headers           map[string]string      `json:"headers" yaml:"headers"`
 }
 
