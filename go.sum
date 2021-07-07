@@ -2,6 +2,8 @@ github.com/LeakIX/l9format v1.1.0 h1:WF+YbAom7K43FLBaeF18K1buXySAsUf/oWIhZXv+r1k
 github.com/LeakIX/l9format v1.1.0/go.mod h1:eKQn32c5PgUM7806Un2v6WTSmJcdcixed+cRHsPEp0k=
 github.com/LeakIX/l9format v1.2.0-alpha.1 h1:wluoAX8aV2t+Oc6lx553KKlvDkVDmRB2af4uYutgp50=
 github.com/LeakIX/l9format v1.2.0-alpha.1/go.mod h1:eKQn32c5PgUM7806Un2v6WTSmJcdcixed+cRHsPEp0k=
+github.com/LeakIX/l9format v1.3.0-beta.1 h1:UjF8VopW03b+FixJvD092yV+g/7cWJP0MvVGV94CegQ=
+github.com/LeakIX/l9format v1.3.0-beta.1/go.mod h1:eKQn32c5PgUM7806Un2v6WTSmJcdcixed+cRHsPEp0k=
 github.com/PuerkitoBio/goquery v1.6.1 h1:FgjbQZKl5HTmcn4sKBgvx8vv63nhyhIpv7lJpFGCWpk=
 github.com/PuerkitoBio/goquery v1.6.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=
