@@ -34,7 +34,8 @@ func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, opt
 	}
 	hasLeak := false
 	var hostHttpClient *http.Client
-	for _, tag := range event.Tags {
+	matchedTags := append(event.Tags, defaultTags...)
+	for _, tag := range matchedTags {
 		matchedTemplates, found := nucleiTemplates[tag]
 		if !found || len(matchedTemplates) < 1 {
 			continue

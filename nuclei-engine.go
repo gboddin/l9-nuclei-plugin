@@ -12,6 +12,11 @@ import (
 	"strings"
 )
 
+// Either too offensive or duplicates of existing l9explore plugins
+var disabledPlugins = []string{"git-config","CVE-2017-5487"}
+// List of  default nuclei tags to run for every event
+var defaultTags []string
+
 func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format.L9Event, hostHttpClient *http.Client) bool {
 	var matcherEval bool
 	for _, request := range template.Requests {
@@ -75,6 +80,11 @@ func (plugin NucleiPlugin) Init() error {
 		log.Println("Nuclei is built-in but no NUCLEI_TEMPLATES environment variable has been found, plugin disabled")
 		return nil
 	}
+	envDefaultTags, isSet := os.LookupEnv("NUCLEI_DEFAULT_TAGS")
+	if isSet {
+		defaultTags = strings.Split(envDefaultTags,",")
+		log.Printf("Loaded %d default tags %s", len(defaultTags), envDefaultTags)
+	}
 	templateCount := 0
 	skippedCount := 0
 	err := filepath.Walk(templatePath, func(path string, info os.FileInfo, err error) error {
@@ -107,6 +117,7 @@ func (plugin NucleiPlugin) Init() error {
 		return nil
 	})
 	log.Printf("Loaded %d Nuclei templates, skipped %d", templateCount, skippedCount)
+	log.Printf("Exposure: %d" , len(nucleiTemplates["exposure"]))
 	return err
 }
 
@@ -166,6 +177,11 @@ func (nTemplate NucleiTemplate) HasTag(tag string) bool {
 
 // IsSupported Check that we only have base http request template without DSL, still 90%
 func (nTemplate NucleiTemplate) IsSupported() bool {
+	for _, disabledPlugin := range disabledPlugins {
+		if nTemplate.Id == disabledPlugin {
+			return false
+		}
+	}
 	if len(nTemplate.Headless) > 0 {
 		return false
 	}
