@@ -13,7 +13,7 @@ import (
 )
 
 // Either too offensive, verbose or duplicates of existing l9explore plugins
-var disabledPlugins = []string{"git-config","CVE-2017-5487","default-nginx-page"}
+var disabledTemplates []string
 // List of  default nuclei tags to run for every event
 var defaultTags []string
 
@@ -84,6 +84,11 @@ func (plugin NucleiPlugin) Init() error {
 	if isSet {
 		defaultTags = strings.Split(envDefaultTags,",")
 		log.Printf("Loaded %d default tags %s", len(defaultTags), envDefaultTags)
+	}
+	envDisabledTemplates, isSet := os.LookupEnv("NUCLEI_DISABLED_TEMPLATES")
+	if isSet {
+		disabledTemplates = strings.Split(envDisabledTemplates,",")
+		log.Printf("Disabled %d templates %s", len(disabledTemplates), envDisabledTemplates)
 	}
 	templateCount := 0
 	skippedCount := 0
@@ -177,7 +182,7 @@ func (nTemplate NucleiTemplate) HasTag(tag string) bool {
 
 // IsSupported Check that we only have base http request template without DSL, still 90%
 func (nTemplate NucleiTemplate) IsSupported() bool {
-	for _, disabledPlugin := range disabledPlugins {
+	for _, disabledPlugin := range disabledTemplates {
 		if nTemplate.Id == disabledPlugin {
 			return false
 		}
