@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// Either too offensive or duplicates of existing l9explore plugins
-var disabledPlugins = []string{"git-config","CVE-2017-5487"}
+// Either too offensive, verbose or duplicates of existing l9explore plugins
+var disabledPlugins = []string{"git-config","CVE-2017-5487","default-nginx-page"}
 // List of  default nuclei tags to run for every event
 var defaultTags []string
 
