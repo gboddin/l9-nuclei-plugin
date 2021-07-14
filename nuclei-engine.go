@@ -2,6 +2,7 @@ package l9_nuclei_plugin
 
 import (
 	"bytes"
+	"context"
 	"github.com/LeakIX/l9format"
 	"gopkg.in/yaml.v2"
 	"io"
@@ -17,20 +18,20 @@ var disabledTemplates []string
 // List of  default nuclei tags to run for every event
 var defaultTags []string
 
-func (plugin NucleiPlugin) RunTemplate(template *NucleiTemplate, event *l9format.L9Event, hostHttpClient *http.Client) bool {
+func (plugin NucleiPlugin) RunTemplate(ctx context.Context, template *NucleiTemplate, event *l9format.L9Event, hostHttpClient *http.Client) bool {
 	var matcherEval bool
 	for _, request := range template.Requests {
 		log.Println("Doing request")
 		for _, path := range request.Path {
 			log.Println("Doing Path")
 			finalUrl := strings.Replace(path, "{{BaseURL}}", event.Url(), -1)
-			log.Printf(finalUrl)
+			log.Print(finalUrl)
 			var bodyReader io.Reader = nil
 			if len(request.Body) > 0 {
 				bodyReader = strings.NewReader(request.Body)
 			}
 			_, body, statusCode, err :=
-				plugin.DoRequest(hostHttpClient, request.Method, finalUrl, bodyReader, request.Headers)
+				plugin.DoRequest(ctx, hostHttpClient, request.Method, finalUrl, bodyReader, request.Headers)
 			if err != nil {
 				continue
 			}
@@ -225,8 +226,8 @@ func (nTemplate NucleiTemplate) IsSupported() bool {
 }
 
 // DoRequest Boring HTTP logic
-func (plugin NucleiPlugin) DoRequest(httpClient *http.Client, method, url string, body io.Reader, headers map[string]string) (http.Header, string, int, error) {
-	httpRequest, err := http.NewRequest(method, url, body)
+func (plugin NucleiPlugin) DoRequest(ctx context.Context, httpClient *http.Client, method, url string, body io.Reader, headers map[string]string) (http.Header, string, int, error) {
+	httpRequest, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, "", -1, err
 	}

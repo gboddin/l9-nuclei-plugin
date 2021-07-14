@@ -46,7 +46,7 @@ func (plugin NucleiPlugin) Run(ctx context.Context, event *l9format.L9Event, opt
 			defer hostHttpClient.CloseIdleConnections()
 		}
 		for _, matchedTemplate := range matchedTemplates {
-			thisHasLeak := plugin.RunTemplate(matchedTemplate, event, hostHttpClient)
+			thisHasLeak := plugin.RunTemplate(ctx, matchedTemplate, event, hostHttpClient)
 			if thisHasLeak {
 				event.Summary += fmt.Sprintf("%s : %s by %s\n-------------\n%s\n\n", matchedTemplate.Id, matchedTemplate.Info.Name, matchedTemplate.Info.Author, matchedTemplate.Info.Description)
 				hasLeak = true
